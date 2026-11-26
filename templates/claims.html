@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Claims{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Claims</h1>
+{% macro claim_card(c, who) %}
+<div class="panel mb-3">
+  <div class="d-flex flex-wrap justify-content-between gap-2">
+    <div><div class="fw-semibold">{{ c.lost_name }} &harr; {{ c.found_name }}</div>
+      <div class="small text-muted">Claim #{{ c.id }} &middot; {{ c.created_at }}{% if who == 'finder' %} &middot; claimed by {{ c.claimant_name }}{% else %} &middot; finder: {{ c.finder_name }}{% endif %}</div></div>
+    <span class="pill claim-{{ c.status }}">{{ c.status }}</span>
+  </div>
+  {% if c.answers %}<pre class="answers mt-3">{{ c.answers }}</pre>{% endif %}
+  {% if c.status == 'rejected' and c.admin_note %}<div class="small mt-2">Admin note: {{ c.admin_note }}</div>{% endif %}
+  {% if c.status == 'approved' %}
+    <div class="contact mt-3"><strong>Approved.</strong> Arrange the return using these details:
+      <div>Owner contact: {{ c.lost_contact }}</div><div>Finder contact: {{ c.found_contact }}</div></div>
+  {% elif c.status == 'pending' %}<div class="small text-muted mt-2">Waiting for admin review. Contact details are released after approval.</div>{% endif %}
+</div>
+{% endmacro %}
+<h2 class="h5">Claims I submitted</h2>
+{% for c in mine %}{{ claim_card(c, 'owner') }}{% else %}<p class="text-muted">You have not submitted any claims. Open Matches and choose "This may be mine".</p>{% endfor %}
+<h2 class="h5 mt-4">Claims on items I found</h2>
+{% for c in incoming %}{{ claim_card(c, 'finder') }}{% else %}<p class="text-muted">No one has claimed an item you found yet.</p>{% endfor %}
+{% endblock %}

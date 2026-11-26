@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<div class="row justify-content-center align-items-center auth-wrap">
+  <div class="col-lg-5 d-none d-lg-block pe-5">
+    <h1 class="auth-title">Someone found it.<br>Let's get it back to you.</h1>
+    <p class="text-muted">Report a lost or found item. Four AI agents compare text and photos on this computer and alert both people the moment a likely match appears.</p>
+  </div>
+  <div class="col-md-8 col-lg-4">
+    <div class="panel">
+      <h2 class="h4 mb-3">Log in</h2>
+      <form method="post" novalidate>
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <label class="form-label" for="email">Email</label>
+        <input class="form-control mb-3" id="email" name="email" type="email" required autofocus>
+        <label class="form-label" for="password">Password</label>
+        <input class="form-control mb-3" id="password" name="password" type="password" required>
+        <button class="btn btn-primary w-100">Log in</button>
+      </form>
+      <p class="small mt-3 mb-0">No account? <a href="{{ url_for('register') }}">Create one</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

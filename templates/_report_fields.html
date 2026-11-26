@@ -1,0 +1,36 @@
+<form method="post" enctype="multipart/form-data" novalidate>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <div class="row g-3">
+    <div class="col-md-6"><label class="form-label" for="item_name">Item name</label>
+      <input class="form-control" id="item_name" name="item_name" maxlength="80" value="{{ form.get('item_name','') }}" required></div>
+    <div class="col-md-6"><label class="form-label" for="category">Category</label>
+      <select class="form-select" id="category" name="category" required>
+        <option value="">Choose...</option>
+        {% for c in categories %}<option {{ 'selected' if form.get('category') == c }}>{{ c }}</option>{% endfor %}
+      </select></div>
+    <div class="col-12"><label class="form-label" for="description">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3" maxlength="1000" required
+        placeholder="Size, condition, marks, what it looks like...">{{ form.get('description','') }}</textarea></div>
+    <div class="col-md-6"><label class="form-label" for="date">{{ 'Date lost' if kind == 'lost' else 'Date found' }}</label>
+      <input class="form-control" type="date" id="date" name="date" value="{{ form.get('date','') }}" required></div>
+    <div class="col-md-6"><label class="form-label" for="location">{{ 'Where did you lose it?' if kind == 'lost' else 'Where did you find it?' }}</label>
+      <input class="form-control" id="location" name="location" maxlength="120" value="{{ form.get('location','') }}" required></div>
+    <div class="col-md-6"><label class="form-label" for="color">Color</label>
+      <input class="form-control" id="color" name="color" maxlength="30" value="{{ form.get('color','') }}"></div>
+    <div class="col-md-6"><label class="form-label" for="brand">Brand</label>
+      <input class="form-control" id="brand" name="brand" maxlength="40" value="{{ form.get('brand','') }}"></div>
+    {% if kind == 'found' %}
+    <div class="col-12"><label class="form-label" for="secret_details">Private identifying detail (optional)</label>
+      <input class="form-control" id="secret_details" name="secret_details" maxlength="300" value="{{ form.get('secret_details','') }}"
+        placeholder="e.g. engraving, lock-screen photo, card inside">
+      <div class="form-text">Never shown to other users. Used only to check the real owner's answers.</div></div>
+    {% endif %}
+    <div class="col-md-6"><label class="form-label" for="contact">Your contact (email or phone)</label>
+      <input class="form-control" id="contact" name="contact" maxlength="80" value="{{ form.get('contact','') }}" required>
+      <div class="form-text">Shared only with the other person after an admin approves a claim.</div></div>
+    <div class="col-md-6"><label class="form-label" for="image">Photo (optional, max 5 MB)</label>
+      <input class="form-control" type="file" id="image" name="image" accept=".png,.jpg,.jpeg,.webp,.bmp" data-preview="#preview">
+      <img id="preview" class="preview d-none mt-2" alt="Selected photo preview"></div>
+  </div>
+  <button class="btn {{ 'btn-primary' if kind == 'lost' else 'btn-accent' }} mt-4">Submit {{ kind }} report</button>
+</form>

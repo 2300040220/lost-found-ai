@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 m-0">Notifications <span class="live-dot" title="Updates live"></span></h1>
+  <form method="post" action="{{ url_for('notifications_read') }}" class="m-0">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <button class="btn btn-sm btn-outline-secondary">Mark all as read</button>
+  </form>
+</div>
+<div id="notif-list">
+  {% for n in items %}
+  <div class="notif {{ "" if n.is_read else "unread" }}" data-id="{{ n.id }}">
+    <a href="{{ n.link }}">{{ n.message }}</a><span class="small text-muted ms-auto">{{ n.created_at }}</span>
+  </div>
+  {% endfor %}
+</div>
+<p id="notif-empty" class="text-muted {{ 'd-none' if items else '' }}">No notifications yet.</p>
+{% endblock %}

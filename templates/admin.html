@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin panel</h1>
+<ul class="nav nav-tabs mb-3" id="admin-tabs" role="tablist">
+  {% for id, label in [('overview','Overview'),('users','Users'),('reports','Reports'),('matches','Matches'),('claims','Claims')] %}
+  <li class="nav-item"><button class="nav-link {{ 'active' if loop.first }}" data-bs-toggle="tab" data-bs-target="#tab-{{ id }}" data-hash="{{ id }}" type="button">
+    {{ label }}{% if id == 'claims' %} <span class="badge text-bg-warning" data-stat="pending_claims">{{ stats.pending_claims }}</span>{% endif %}</button></li>
+  {% endfor %}
+</ul>
+
+<div class="tab-content">
+<div class="tab-pane fade show active" id="tab-overview">
+  <div class="row g-3 mb-4">
+    {% for key, label in [('total_users','Users'),('total_lost','Lost reports'),('total_found','Found reports'),('potential_matches','Potential matches'),('pending_claims','Pending claims'),('returned_items','Returned')] %}
+    <div class="col-6 col-md-4 col-lg-2"><div class="stat"><div class="stat-num" data-stat="{{ key }}">{{ stats[key] }}</div><div class="stat-label">{{ label }}</div></div></div>
+    {% endfor %}
+  </div>
+  <div class="panel"><h2 class="h6">Agent activity log</h2>
+    <div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Time</th><th>Agent</th><th>Action</th><th>Detail</th></tr></thead><tbody>
+      {% for l in logs %}<tr><td class="text-nowrap">{{ l.created_at }}</td><td>{{ l.agent }}</td><td>{{ l.action }}</td><td>{{ l.detail }}</td></tr>
+      {% else %}<tr><td colspan="4" class="text-muted">No agent activity yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+</div>
+
+<div class="tab-pane fade" id="tab-users"><div class="panel"><div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Lost</th><th>Found</th><th>Joined</th></tr></thead><tbody>
+  {% for u in users %}<tr><td>{{ u.id }}</td><td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.phone }}</td><td>{{ u.role }}</td><td>{{ u.lost_count }}</td><td>{{ u.found_count }}</td><td>{{ u.created_at }}</td></tr>{% endfor %}
+</tbody></table></div></div></div>
+
+<div class="tab-pane fade" id="tab-reports"><div class="panel"><div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>Type</th><th>ID</th><th>Item</th><th>Category</th><th>Reporter</th><th>Contact</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>
+  {% for kind, items in [('lost', lost), ('found', found)] %}{% for i in items %}
+  <tr><td><span class="pill pill-{{ kind }}">{{ kind }}</span></td><td>{{ i.id }}</td><td>{{ i.item_name }}<div class="small text-muted">{{ i.description[:70] }}</div></td>
+    <td>{{ i.category }}</td><td>{{ i.owner }}</td><td>{{ i.contact }}</td><td>{{ i.date }}</td><td>{{ i.status }}</td>
+    <td><form method="post" action="{{ url_for('admin_delete', kind=kind, item_id=i.id) }}" onsubmit="return confirm('Remove this report?')">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-danger">Remove</button></form></td></tr>
+  {% endfor %}{% endfor %}
+</tbody></table></div></div></div>
+
+<div class="tab-pane fade" id="tab-matches"><div class="panel"><div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>#</th><th>Lost item (owner)</th><th>Found item (finder)</th><th>Text</th><th>Details</th><th>Image</th><th>Combined</th><th>Status</th><th></th></tr></thead><tbody>
+  {% for m in matches %}<tr><td>{{ m.id }}</td><td>{{ m.lost_name }}<div class="small text-muted">{{ m.lost_user }}</div></td><td>{{ m.found_name }}<div class="small text-muted">{{ m.found_user }}</div></td>
+    <td>{{ (m.text_score*100)|round|int }}%</td><td>{{ (m.meta_score*100)|round|int }}%</td><td>{{ (m.image_score*100)|round|int ~ '%' if m.image_score is not none else '-' }}</td>
+    <td class="fw-semibold">{{ (m.combined_score*100)|round|int }}%</td><td>{{ m.status.replace('_',' ') }}</td>
+    <td>{% if m.status in ('potential','claim_pending') %}<form method="post" action="{{ url_for('admin_return', match_id=m.id) }}" onsubmit="return confirm('Mark as returned?')">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-success">Mark returned</button></form>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="9" class="text-muted">No matches yet.</td></tr>{% endfor %}
+</tbody></table></div></div></div>
+
+<div class="tab-pane fade" id="tab-claims">
+  {% for c in claims %}
+  <div class="panel mb-3">
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <div><div class="fw-semibold">Claim #{{ c.id }}: {{ c.lost_name }} &harr; {{ c.found_name }}</div>
+        <div class="small text-muted">Claimant {{ c.claimant_name }} &middot; finder {{ c.finder_name }} &middot; match {{ (c.combined_score*100)|round|int }}% &middot; {{ c.created_at }}</div></div>
+      <span class="pill claim-{{ c.status }}">{{ c.status }}</span>
+    </div>
+    <div class="row g-3 mt-1">
+      <div class="col-lg-7"><div class="small fw-semibold">Claimant's answers</div><pre class="answers">{{ c.answers }}</pre></div>
+      <div class="col-lg-5">
+        <div class="small fw-semibold">Finder's private clue</div><div class="answers mb-2">{{ c.secret_details or '(none given)' }}</div>
+        <div class="small fw-semibold">Verification Agent (advisory only)</div>
+        <div class="advisory"><b>{{ (c.verification_score*100)|round|int }}%</b> <span class="small">{{ c.verification_notes }}</span></div>
+      </div>
+    </div>
+    {% if c.status == 'pending' %}
+    <form method="post" class="d-flex flex-wrap gap-2 mt-3 align-items-center">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <input class="form-control form-control-sm" style="max-width:320px" name="note" placeholder="Note to users (optional)">
+      <button class="btn btn-success btn-sm" formaction="{{ url_for('admin_decide', claim_id=c.id, action='approve') }}">Approve and release contacts</button>
+      <button class="btn btn-outline-danger btn-sm" formaction="{{ url_for('admin_decide', claim_id=c.id, action='reject') }}">Reject</button>
+    </form>
+    {% elif c.admin_note %}<div class="small mt-2">Admin note: {{ c.admin_note }}</div>{% endif %}
+  </div>
+  {% else %}<div class="panel text-muted">No claims yet.</div>{% endfor %}
+</div>
+</div>
+{% endblock %}

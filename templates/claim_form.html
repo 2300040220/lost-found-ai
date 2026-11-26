@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Claim item{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8"><div class="panel">
+  <h1 class="h4">Prove it is yours</h1>
+  <p class="text-muted">Matched with a found <strong>{{ match.found_name }}</strong> ({{ (match.combined_score * 100)|round|int }}% similar). Answer from your own knowledge of the item.
+  An admin reviews every claim. The AI score is only a hint.</p>
+  <form method="post" novalidate>
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    {% for q in questions %}
+      <label class="form-label" for="a{{ loop.index0 }}">{{ q }}</label>
+      <textarea class="form-control mb-3" id="a{{ loop.index0 }}" name="answer_{{ loop.index0 }}" rows="2" maxlength="500">{{ answers[loop.index0] if answers else '' }}</textarea>
+    {% endfor %}
+    <button class="btn btn-primary">Submit claim</button>
+    <a class="btn btn-link" href="{{ url_for('matches') }}">Cancel</a>
+  </form>
+</div></div></div>
+{% endblock %}

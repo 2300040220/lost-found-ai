@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 m-0">Dashboard</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="{{ url_for('report', kind='lost') }}">I lost something</a>
+    <a class="btn btn-accent" href="{{ url_for('report', kind='found') }}">I found something</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  {% for key, label in [('total_lost','Lost items'),('total_found','Found items'),('potential_matches','Potential matches'),('returned_items','Returned to owners')] %}
+  <div class="col-6 col-lg-3"><div class="stat">
+    <div class="stat-num" data-stat="{{ key }}">{{ stats[key] }}</div><div class="stat-label">{{ label }}</div>
+  </div></div>
+  {% endfor %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="panel">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 m-0">Recent reports <span class="live-dot" title="Updates live"></span></h2>
+        <div class="d-flex gap-2 flex-wrap">
+          <input id="f-search" class="form-control form-control-sm" placeholder="Search name or place" style="width:190px">
+          <select id="f-kind" class="form-select form-select-sm" style="width:110px"><option value="">All</option><option value="lost">Lost</option><option value="found">Found</option></select>
+          <select id="f-cat" class="form-select form-select-sm" style="width:140px"><option value="">All categories</option>{% for c in categories %}<option>{{ c }}</option>{% endfor %}</select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Type</th><th>Item</th><th>Category</th><th>Location</th><th>Date</th></tr></thead>
+          <tbody id="recent-body">
+            {% for r in recent %}
+            <tr data-kind="{{ r.kind }}" data-cat="{{ r.category }}" data-text="{{ (r.item_name ~ ' ' ~ r.location)|lower }}">
+              <td><span class="pill pill-{{ r.kind }}">{{ r.kind }}</span></td><td>{{ r.item_name }}</td>
+              <td>{{ r.category }}</td><td>{{ r.location }}</td><td>{{ r.date }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p id="recent-empty" class="text-muted small mt-3 mb-0 {{ 'd-none' if recent else '' }}">No reports yet. Be the first to report an item.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel">
+      <h2 class="h5 mb-3">Your reports</h2>
+      {% for it in my_lost %}<div class="mine"><span class="pill pill-lost">lost</span> {{ it.item_name }}<span class="ms-auto status-{{ it.status }}">{{ it.status }}</span></div>{% endfor %}
+      {% for it in my_found %}<div class="mine"><span class="pill pill-found">found</span> {{ it.item_name }}<span class="ms-auto status-{{ it.status }}">{{ it.status }}</span></div>{% endfor %}
+      {% if not my_lost and not my_found %}<p class="text-muted small mb-0">You have not reported anything yet.</p>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+<div class="side">
+  {% if image %}<img class="thumb" src="{{ url_for('uploads', filename=image) }}" alt="{{ name }}">{% else %}<div class="thumb thumb-empty">No photo</div>{% endif %}
+  <div class="side-body">
+    <div class="small fw-semibold">{{ label }}</div>
+    <div class="fw-semibold">{{ name }}</div>
+    <div class="small text-muted">{{ category }}{% if color %} &middot; {{ color }}{% endif %}{% if brand %} &middot; {{ brand }}{% endif %}</div>
+    <div class="small mt-1">{{ description }}</div>
+    <div class="small text-muted mt-1">{{ place }} &middot; {{ date }}</div>
+    {% set seen = detected|objects %}{% if seen %}<div class="small mt-1"><span class="pill">YOLO sees</span> {{ seen }}</div>{% endif %}
+  </div>
+</div>

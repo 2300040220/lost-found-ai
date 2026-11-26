@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Matches{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 m-0">Possible matches</h1>
+  <select id="min-score" class="form-select form-select-sm" style="width:190px">
+    <option value="0">Any score</option><option value="50">50% or more</option><option value="70">70% or more</option>
+  </select>
+</div>
+<div class="alert alert-info small">{{ image_disclaimer }}</div>
+
+{% for m in matches %}
+<div class="match" data-score="{{ (m.combined_score * 100)|round|int }}" data-match="{{ m.id }}">
+  <div class="match-score">
+    <div class="ring" style="--p: {{ (m.combined_score * 100)|round|int }}"><span>{{ (m.combined_score * 100)|round|int }}%</span></div>
+    <div class="small text-muted mt-1">combined</div>
+  </div>
+  <div class="match-body">
+    <div class="row g-3">
+      <div class="col-md-6">{% with label='Lost item', image=m.lost_image, name=m.lost_name, category=m.lost_category, color=m.lost_color, brand=m.lost_brand, description=m.lost_description, place=m.lost_location, date=m.lost_date, detected=m.lost_detected %}{% include "_item_side.html" %}{% endwith %}</div>
+      <div class="col-md-6">{% with label='Found item', image=m.found_image, name=m.found_name, category=m.found_category, color=m.found_color, brand=m.found_brand, description=m.found_description, place=m.found_location, date=m.found_date, detected=m.found_detected %}{% include "_item_side.html" %}{% endwith %}</div>
+    </div>
+    <div class="bars mt-3">
+      <div><span>Text</span><div class="bar"><i style="width: {{ (m.text_score * 100)|round|int }}%"></i></div><b>{{ (m.text_score * 100)|round|int }}%</b></div>
+      <div><span>Details</span><div class="bar"><i style="width: {{ (m.meta_score * 100)|round|int }}%"></i></div><b>{{ (m.meta_score * 100)|round|int }}%</b></div>
+      <div><span>Image</span>
+        {% if m.image_score is not none %}<div class="bar"><i style="width: {{ (m.image_score * 100)|round|int }}%"></i></div><b>{{ (m.image_score * 100)|round|int }}%</b>
+        {% else %}<div class="small text-muted">needs a photo on both items</div><b></b>{% endif %}</div>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+      <span class="pill status-badge-{{ m.status }}">{{ m.status.replace('_', ' ') }}</span>
+      <span class="small text-muted">You are the {{ 'owner' if m.my_role == 'owner' else 'finder' }}.</span>
+      {% if m.my_role == 'owner' and m.status == 'potential' %}
+        <a class="btn btn-primary btn-sm ms-auto" href="{{ url_for('claim_form', match_id=m.id) }}">This may be mine</a>
+      {% elif m.my_role == 'finder' and m.status == 'potential' %}
+        <span class="small text-muted ms-auto">Waiting for the owner to claim.</span>
+      {% elif m.status == 'claim_pending' %}<span class="small text-muted ms-auto">A claim is awaiting admin review.</span>
+      {% elif m.status == 'returned' %}<span class="small ms-auto fw-semibold">Returned. Contact details are in Claims.</span>{% endif %}
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="panel text-center text-muted">No matches yet. When someone reports a similar item, it will appear here and you will be notified instantly.</div>
+{% endfor %}
+{% endblock %}

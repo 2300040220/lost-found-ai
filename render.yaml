@@ -1,0 +1,29 @@
+# Optional "Blueprint" for Render (https://render.com). You can also create the service by hand in the dashboard.
+# IMPORTANT: -w 1 (one worker) is required by Flask-SocketIO unless you add a message queue; threads give concurrency.
+services:
+  - type: web
+    name: lost-found-ai
+    runtime: python
+    plan: free                      # free = data is lost on every restart/redeploy; see docs/DEPLOY_RENDER.md
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 1 --threads 50 -b 0.0.0.0:$PORT app:app
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: LF_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false                 # you type this value in the Render dashboard
+      - key: ADMIN_EMAIL
+        value: admin@lostfound.local
+      - key: YOLO_ENABLED
+        value: "0"                  # set to 0 if the server runs out of memory
+    # For permanent data, use a paid plan and add:
+    #   plan: starter
+    #   disk: { name: data, mountPath: /var/data, sizeGB: 1 }
+    # and set these two variables:
+    #   LF_DATABASE=/var/data/lost_found.db
+    #   LF_UPLOAD_FOLDER=/var/data/uploads
